@@ -1,0 +1,21 @@
+plugins {
+    id 'java'
+}
+
+group 'com.hansdesk'
+version '0.0.1'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'io.reactivex.rxjava3:rxjava:3.1.1'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+}
+
+test {
+    useJUnitPlatform()
+}
