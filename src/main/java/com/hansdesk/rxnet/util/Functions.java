@@ -1,4 +1,4 @@
-package com.hansdesk.net.util;
+package com.hansdesk.rxnet.util;
 
 import io.reactivex.rxjava3.exceptions.OnErrorNotImplementedException;
 

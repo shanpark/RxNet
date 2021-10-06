@@ -1,4 +1,4 @@
-package com.hansdesk.net.tcp;
+package com.hansdesk.rxnet.tcp;
 
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.exceptions.OnErrorNotImplementedException;
@@ -18,16 +18,16 @@ public class ChannelSource {
     private static class ReqRegister {
         public SelectableChannel channel;
         public int ops;
-        public Observable<SocketChannel> observable;
+        public Subject<?> subject;
 
-        public ReqRegister(SelectableChannel channel, int ops, Observable<SocketChannel> observable) {
+        public ReqRegister(SelectableChannel channel, int ops, Subject<?> subject) {
             this.channel = channel;
             this.ops = ops;
-            this.observable = observable;
+            this.subject = subject;
         }
 
         public void register(Selector selector) throws ClosedChannelException {
-            channel.register(selector, ops, observable);
+            channel.register(selector, ops, subject);
         }
     }
 
@@ -98,9 +98,9 @@ public class ChannelSource {
             selector.close();
     }
 
-    public void register(SelectableChannel channel, int ops, Observable<SocketChannel> observable) throws ClosedChannelException {
+    public void register(SelectableChannel channel, int ops, Subject<?> subject) throws ClosedChannelException {
         synchronized (registerQueue) {
-            registerQueue.add(new ReqRegister(channel, ops, observable));
+            registerQueue.add(new ReqRegister(channel, ops, subject));
         }
         selector.wakeup();
     }
