@@ -15,22 +15,6 @@ import java.util.function.Consumer;
 
 public class ServerChannel {
 
-    public static class Builder {
-        private String hostname;
-        private int port;
-
-        private ChannelSource channelSource;
-
-        public Builder channelSource(ChannelSource channelSource) {
-            this.channelSource = channelSource;
-            return this;
-        }
-
-        public ServerChannel build() {
-            return null;
-        }
-    }
-
     private final ChannelSource channelSource;
     private final PublishSubject<SocketChannel> subject;
     private Disposable disposable;
