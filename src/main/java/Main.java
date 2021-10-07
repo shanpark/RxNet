@@ -12,14 +12,14 @@ public class Main {
             @Override
             public void onNewChannel(Server server, Channel channel) {
                 log(channel);
-                server.stop();
+//                server.stop();
             }
         };
 
         Handler handler = new Handler() {
             @Override
             public Object onInbound(Channel channel, Object inboundObj) {
-                channel.out(inboundObj);
+                channel.write(inboundObj);
                 return null;
             }
         };

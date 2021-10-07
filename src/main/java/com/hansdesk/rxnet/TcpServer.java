@@ -8,17 +8,19 @@ import io.reactivex.rxjava3.subjects.PublishSubject;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 
-public class TcpServer implements Server {
+public class TcpServer implements Server, Selectable {
     private final SignalSource source = SelectorSources.single();
-    private final PublishSubject<Long> subject = PublishSubject.create();
+    private final PublishSubject<Integer> subject = PublishSubject.create();
     private final JustFuture future = new JustFuture();
     private Disposable disposable;
 
     private ServerSocketChannel channel;
+    private SelectionKey selectionKey;
 
     private String hostname;
     private int port;
@@ -57,7 +59,7 @@ public class TcpServer implements Server {
 
     @Override
     public Server start() {
-        Observer<Long> observer = new Observer<Long>() {
+        Observer<Integer> observer = new Observer<Integer>() {
             @Override
             public void onSubscribe(@NonNull Disposable d) {
                 disposable = d;
@@ -67,7 +69,7 @@ public class TcpServer implements Server {
 
                     channel = ServerSocketChannel.open();
                     channel.configureBlocking(false);
-                    source.register(channel, SelectionKey.OP_ACCEPT, subject);
+                    source.register(TcpServer.this, SelectionKey.OP_ACCEPT, subject);
                     channel.bind(inetSocketAddress);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
@@ -75,7 +77,8 @@ public class TcpServer implements Server {
             }
 
             @Override
-            public void onNext(@NonNull Long signal) {
+            public void onNext(@NonNull Integer signal) {
+                System.out.format("%s\t: signal - %x\n", Thread.currentThread().getName(), signal);
                 try {
                     SocketChannel socketChannel = channel.accept();
                     TcpChannel newChannel = Channels.tcpChannelFrom(socketChannel);
@@ -131,6 +134,16 @@ public class TcpServer implements Server {
     @Override
     public boolean await(long millis) {
         return future.await(millis);
+    }
+
+    @Override
+    public SelectableChannel channel() {
+        return channel;
+    }
+
+    @Override
+    public void selectionKey(SelectionKey key) {
+        selectionKey = key;
     }
 
     private void clear() {

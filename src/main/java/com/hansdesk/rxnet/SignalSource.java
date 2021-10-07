@@ -21,18 +21,18 @@ import java.util.function.Consumer;
 class SignalSource {
 
     private static class RegisterRequest {
-        public SelectableChannel channel;
+        public Selectable selectable;
         public int ops;
         public Object attachment;
 
-        public RegisterRequest(SelectableChannel channel, int ops, Object attachment) {
-            this.channel = channel;
+        public RegisterRequest(Selectable selectable, int ops, Object attachment) {
+            this.selectable = selectable;
             this.ops = ops;
             this.attachment = attachment;
         }
 
         public void register(Selector selector) throws ClosedChannelException {
-            channel.register(selector, ops, attachment);
+            selectable.selectionKey(selectable.channel().register(selector, ops, attachment));
         }
     }
 
@@ -72,11 +72,14 @@ class SignalSource {
                 })
                 .subscribeOn(Schedulers.computation())
                 .subscribe(this::onNext, onError::accept, onComplete::run);
+
+        while (selector == null)
+            Thread.yield();
     }
 
     private void onNext(SelectionKey key) {
         //noinspection unchecked
-        ((Subject<Long>) key.attachment()).onNext(key.readyOps());
+        ((Subject<Integer>) key.attachment()).onNext(key.readyOps());
     }
 
     /**
@@ -88,9 +91,9 @@ class SignalSource {
             selector.close();
     }
 
-    public void register(SelectableChannel channel, int ops, Object attachment) {
+    public void register(Selectable selectable, int ops, Object attachment) {
         synchronized (registerRequestQueue) {
-            registerRequestQueue.add(new RegisterRequest(channel, ops, attachment));
+            registerRequestQueue.add(new RegisterRequest(selectable, ops, attachment));
         }
         selector.wakeup();
     }
