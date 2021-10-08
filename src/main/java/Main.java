@@ -12,22 +12,37 @@ public class Main {
             @Override
             public void onNewChannel(Server server, Channel channel) {
                 log(channel);
-//                server.stop();
             }
         };
 
         Handler handler = new Handler() {
             @Override
-            public Object onInbound(Channel channel, Object inboundObj) {
-                channel.write(inboundObj);
-                return null;
+            public void onStart(Channel channel) {
+                System.out.format("New Channel started: %s\n", channel.toString());
+            }
+
+            @Override
+            public void onInbound(Channel channel, Buffer buffer) {
+                channel.write(buffer);
+                throw new RuntimeException("Test!!!");
+            }
+
+            @Override
+            public void onStop(Channel channel) {
+                System.out.format("Channel stopped: %s\n", channel.toString());
+            }
+
+            @Override
+            public void onError(Channel channel, Throwable e) {
+                System.out.format("Channel error: %s\n", channel.toString());
+                e.printStackTrace();
             }
         };
 
         Server s = Servers.newTcpServer()
-                .port(8080)
+                .port(9000)
                 .serverHandler(serverHandler)
-                .defaultHandlerChain(HandlerChain.of(handler))
+                .channelHandler(handler)
                 .start();
 
         s.await();
